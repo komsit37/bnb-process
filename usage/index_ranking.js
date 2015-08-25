@@ -1,9 +1,13 @@
 var elasticsearch = require('elasticsearch');
 var CONFIG = require('config');
+var moment = require('moment');
 
 var logger = require('./../lib/init/logger');
 
-var INDEX = 'bnb-2015.08.24';
+var batchDate = moment('2015-08-24');
+
+
+var INDEX = 'bnb-' + batchDate.format('YYYY.MM.DD');
 var TYPE = 'ranking';
 var SEARCH_Q = '+_type:search';
 var SIZE = 100;
@@ -16,6 +20,8 @@ var es = new elasticsearch.Client({
     log: 'info'
 });
 
+logger.info('indexing ranking for ' + INDEX + '...');
+
 es.search({
     index: INDEX,
     q: SEARCH_Q,
@@ -25,24 +31,22 @@ es.search({
     var searchResults = response.hits.hits.map(function(d){return d._source});
     logger.info('found', searchResults.length, 'search results');
 
-    var myId = '3266217';
     var idRankMap = {};
     for (i in searchResults){
         //console.log(res[i]);
         var result = searchResults[i];
-        logger.info('getting ranks for', result.ids.length, 'ids');
+        logger.info('getting ranks for', result.ids.length, 'ids    (' + result.term + ', ' + result.guests + ' guests)');
         result.ids.forEach(function(id, ii){
             upsertRank(result, ii+1, idRankMap, id);
         })
     }
-    if (test) logger.debug('my room:', idRankMap[myId]);
+    if (test) logger.debug('my room:', idRankMap['3266217']);
+
     var body = [];
     Object.keys(idRankMap).forEach(function(id){
-        //console.log(id);
-        var r = idRankMap[id];
-        //console.log(r);
-        body.push({index: {_index: INDEX, _type: TYPE, _id:r.id }});
-        body.push(r);
+        var rank = idRankMap[id];
+        body.push({index: {_index: INDEX, _type: TYPE, _id:id }});
+        body.push(rank);
     });
     if (body.length > 0) {
         logger.info('bulk indexing', body.length, 'ids');
@@ -55,7 +59,7 @@ function upsertRank(result, i, idRankMap, id) {
     var rank = {term: result.term, guests: result.guests, rank: i};
     if (!idRankMap[id]) {
         //create new
-        idRankMap[id] = {timestamp: new Date(), id: id, ranks: [rank]}
+        idRankMap[id] = {timestamp: batchDate, id: id, ranks: [rank]}
     } else {
         //update existing
         idRankMap[id].ranks.push(rank);
