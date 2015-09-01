@@ -1,11 +1,9 @@
 var elasticsearch = require('elasticsearch');
 var CONFIG = require('config');
 var moment = require('moment');
-
-var logger = require('./../lib/init/logger');
+var logger = require('winston');
 
 var batchDate = moment('2015-08-24');
-
 
 var INDEX = 'bnb-' + batchDate.format('YYYY.MM.DD');
 var TYPE = 'ranking';
@@ -13,12 +11,17 @@ var SEARCH_Q = '+_type:search';
 var SIZE = 100;
 
 var test = false;
+if (test) INDEX = 'test';
 if (test) SEARCH_Q += ' +term:Harajuku-Station--Tokyo--Japan +guests:2';
 
 var es = new elasticsearch.Client({
     host: CONFIG.ELASTICSEARCH_HOST,
     log: 'info'
 });
+
+var BatchReporterEs = require('batch-reporter-es').BatchReporterEs;
+var batch = new BatchReporterEs(CONFIG.ELASTICSEARCH_HOST, 'test', TYPE, 'info');
+
 
 logger.info('indexing ranking for ' + INDEX + '...');
 
@@ -37,11 +40,14 @@ es.search({
         var result = searchResults[i];
         logger.info('getting ranks for', result.ids.length, 'ids    (' + result.term + ', ' + result.guests + ' guests)');
         result.ids.forEach(function(id, ii){
+            batch.queued(id, result.term + ', ' + result.guests);
             upsertRank(result, ii+1, idRankMap, id);
+            batch.completed(id);
         })
     }
     if (test) logger.debug('my room:', idRankMap['3266217']);
 
+    //build index
     var body = [];
     Object.keys(idRankMap).forEach(function(id){
         var rank = idRankMap[id];

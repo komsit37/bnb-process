@@ -1,4 +1,4 @@
-var moment = require('moment');
+x = {};
 
-var d = moment('2015-08-24');
-console.log(d.format('YYYY.MM.DD'));
+var y = x['x'];
+console.log(y)

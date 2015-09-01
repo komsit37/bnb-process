@@ -29,3 +29,5 @@ node_modules
 
 secret.js
 config/*.*
+
+usage/scratch.js
