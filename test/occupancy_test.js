@@ -17,9 +17,8 @@ describe('Occupancy', function () {
             reservation_rate: 0.49,
             available_rate: 0.46,
             busy_rate: 0.05,
-            total: 61,
-            timestamp: '2015-09-04T11:02:41.212Z',
-            duration: '2M' });
+            total: 61
+        });
     });
 
     var duration = '1M';
@@ -34,9 +33,7 @@ describe('Occupancy', function () {
             busy_rate: 0.1,
             reservation: 22,
             reservation_rate: 0.73,
-            total: 30,
-            timestamp: '2015-09-04T11:02:41.212Z',
-            duration: '1M'
+            total: 30
         });
     });
 });

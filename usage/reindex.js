@@ -27,3 +27,12 @@ es.get({
     console.log(response);
     es.index({index: 'test', type: 'calendar', id: response._id, body: response._source}).then(console.log);
 });
+
+es.get({
+    index: INDEX,
+    type: 'room',
+    id: '3266217'
+}).then(function (response) {
+    console.log(response);
+    es.index({index: 'test', type: 'room', id: response._id, body: response._source}).then(console.log);
+});
