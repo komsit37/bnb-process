@@ -3,7 +3,7 @@ var CONFIG = require('config');
 var moment = require('moment');
 var logger = require('winston');
 
-var batchDate = moment('2015-08-24');
+var batchDate = moment('2015-09-04');
 
 var INDEX = 'bnb-' + batchDate.format('YYYY.MM.DD');
 var TYPE = 'ranking';
@@ -16,11 +16,12 @@ if (test) SEARCH_Q += ' +term:Harajuku-Station--Tokyo--Japan +guests:2';
 
 var es = new elasticsearch.Client({
     host: CONFIG.ELASTICSEARCH_HOST,
-    log: 'info'
+    log: 'debug',
+    requestTimeout: 120000
 });
 
-var BatchReporterEs = require('batch-reporter-es').BatchReporterEs;
-var batch = new BatchReporterEs(CONFIG.ELASTICSEARCH_HOST, 'test', TYPE, 'info');
+//var BatchReporterEs = require('batch-reporter-es').BatchReporterEs;
+//var batch = new BatchReporterEs(CONFIG.ELASTICSEARCH_HOST, 'test', TYPE, 'info');
 
 
 logger.info('indexing ranking for ' + INDEX + '...');
@@ -40,12 +41,12 @@ es.search({
         var result = searchResults[i];
         logger.info('getting ranks for', result.ids.length, 'ids    (' + result.term + ', ' + result.guests + ' guests)');
         result.ids.forEach(function(id, ii){
-            batch.queued(id, result.term + ', ' + result.guests);
+            //batch.queued(id, result.term + ', ' + result.guests);
             upsertRank(result, ii+1, idRankMap, id);
-            batch.completed(id);
+            //batch.completed(id);
         })
     }
-    if (test) logger.debug('my room:', idRankMap['3266217']);
+    logger.debug('my room:', idRankMap['3266217']);
 
     //build index
     var body = [];
@@ -56,7 +57,7 @@ es.search({
     });
     if (body.length > 0) {
         logger.info('bulk indexing', body.length, 'ids');
-        es.bulk({body: body}).then(logger.debug);
+        es.bulk({body: body}).then(function(x){logger.info('done')}).catch(function(err){logger.error(err)});
     }else
         logger.info('search returned empty results');
 });
@@ -65,7 +66,7 @@ function upsertRank(result, i, idRankMap, id) {
     var rank = {term: result.term, guests: result.guests, rank: i};
     if (!idRankMap[id]) {
         //create new
-        idRankMap[id] = {timestamp: batchDate, id: id, ranks: [rank]}
+        idRankMap[id] = {timestamp: batchDate.toDate(), id: id, ranks: [rank]}
     } else {
         //update existing
         idRankMap[id].ranks.push(rank);

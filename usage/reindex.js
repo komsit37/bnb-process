@@ -3,7 +3,7 @@ var CONFIG = require('config');
 var moment = require('moment');
 var logger = require('winston');
 
-var batchDate = moment('2015-08-25');
+var batchDate = moment('2015-09-04');
 var INDEX = 'bnb-' + batchDate.format('YYYY.MM.DD');
 
 //var test = true;

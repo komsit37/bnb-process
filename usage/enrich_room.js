@@ -3,12 +3,11 @@ var CONFIG = require('config');
 var moment = require('moment');
 var logger = require('winston');
 
-var batchDate = moment('2015-08-25');
-var INDEX = 'bnb-' + batchDate.format('YYYY.MM.DD');
+var batchDate = moment('2015-09-04');
+//var INDEX = 'bnb-' + batchDate.format('YYYY.MM.DD');
 
-//var test = true;
-//if (test) INDEX = 'test';
-//if (test) SEARCH_Q += ' +term:Harajuku-Station--Tokyo--Japan +guests:2';
+var test = true;
+if (test) INDEX = 'test';
 
 var es = new elasticsearch.Client({
     host: CONFIG.ELASTICSEARCH_HOST,
