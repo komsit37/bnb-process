@@ -3,7 +3,14 @@ var CONFIG = require('config');
 var moment = require('moment');
 var logger = require('winston');
 
-var batchDate = moment('2015-09-04');
+logger.add(logger.transports.DailyRotateFile, {
+    datePattern: '.yyyy.MM.dd',
+    level: 'info',
+    filename: 'logs/index_ranking.log',
+    json: false
+});
+
+var batchDate = moment().utc();
 
 var INDEX = 'bnb-' + batchDate.format('YYYY.MM.DD');
 var TYPE = 'ranking';

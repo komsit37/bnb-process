@@ -4,7 +4,16 @@ var moment = require('moment');
 var logger = require('winston');
 var cu = require('./../lib/cal-utils');
 var _ = require('lodash');
-var batchDate = moment('2015-09-04');
+//var batchDate = moment('2015-09-04');
+
+logger.add(logger.transports.DailyRotateFile, {
+    datePattern: '.yyyy.MM.dd',
+    level: 'info',
+    filename: 'logs/calculate_calendar.log',
+    json: false
+});
+
+var batchDate = moment().utc();
 var INDEX = 'bnb-' + batchDate.format('YYYY.MM.DD');
 
 
@@ -43,7 +52,7 @@ function schedule_reindex() {
         setTimeout(schedule_reindex, 50);
     } else{
         //console.log('last one', ids[ids.length - 1])
-        console.log('done');
+        logger.log('done');
     }
 }
 
@@ -58,7 +67,7 @@ function reindex(id) {
         }
     }, function (err, response) {
         if (err) {
-            console.error(err);
+            logger.error(id + ' - ' + err);
             return;
         }
         //console.log(response.docs);
@@ -66,7 +75,11 @@ function reindex(id) {
         var calDoc = response.docs[1];
         roomDoc._source.calculated = {calendar: cu.all(calDoc._source)};
         //console.log(roomDoc._source.calculated);
-        es.index({index: INDEX, type: 'room', id: roomDoc._id, body: roomDoc._source}).then(console.log(counter + '/' + ids.length));
+        es.index({index: INDEX, type: 'room', id: roomDoc._id, body: roomDoc._source}).then(
+            function(x){logger.info(counter + '/' + ids.length + ' - ' + id)})
+            .catch(function(err){
+                logger.error(err);
+            });
     });
 }
 

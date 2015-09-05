@@ -31,3 +31,4 @@ secret.js
 config/*.*
 
 usage/scratch.js
+logs/*
